@@ -35,3 +35,5 @@ The program will:
 - print the new cmd.exe PID and the spoofed parent PID, then exit. The new `cmd.exe` will show the chosen process as its parent in tools like Process Explorer or `tasklist`.
 
 To spoof the parent of elevated or protected processes, run the command prompt as Administrator from the start.
+
+/{76493691-73A9-49E4-81D1-30218FF5F654}.png
