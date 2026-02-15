@@ -37,3 +37,5 @@ The program will:
 - and exit. The new `cmd.exe` runs in the security context of the target process.
 
 To impersonate elevated or protected processes, approve the UAC prompt when asked, or run the command prompt as Administrator from the start.
+
+![Token Impersonation + Create Process with Token](https://github.com/ary4nsh/Access-Token-Manipulation/blob/main/Token%20Impersonation%20%2B%20Create%20Process%20with%20Token/%7B76493691-73A9-49E4-81D1-30218FF5F654%7D.png)
