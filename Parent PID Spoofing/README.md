@@ -36,5 +36,6 @@ The program will:
 
 To spoof the parent of elevated or protected processes, run the command prompt as Administrator from the start.
 
-/{0D34557C-599C-46C3-90DC-C803B0776110}.png
+[/{0D34557C-599C-46C3-90DC-C803B0776110}.png](https://github.com/ary4nsh/Access-Token-Manipulation/blob/main/Parent%20PID%20Spoofing/%7B0D34557C-599C-46C3-90DC-C803B0776110%7D.png)
+
 
