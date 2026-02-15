@@ -36,4 +36,5 @@ The program will:
 
 To spoof the parent of elevated or protected processes, run the command prompt as Administrator from the start.
 
-/{76493691-73A9-49E4-81D1-30218FF5F654}.png
+/{0D34557C-599C-46C3-90DC-C803B0776110}.png
+
