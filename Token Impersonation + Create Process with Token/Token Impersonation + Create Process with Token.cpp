@@ -13,14 +13,14 @@ static void PrintError(const char* text) {
 
     FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER |  // dwFlags: Allocate a buffer for the message
-        FORMAT_MESSAGE_FROM_SYSTEM |               // dwFlags: Get the message from the system message table
-        FORMAT_MESSAGE_IGNORE_INSERTS,             // dwFlags: Do not expand insert sequences in the message
-        nullptr,                         // lpSource: NULL for system messages
-        err,                          // dwMessageId: The error code to look up
-        0,                           // dwLanguageId: 0 for default language
-        (LPSTR)&buf,                     // lpBuffer: Pointer to variable that receives the allocated buffer pointer
-        0,                                  // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
-        nullptr);                       // Arguments: NULL for no insert values
+        FORMAT_MESSAGE_FROM_SYSTEM |      // dwFlags: Get the message from the system message table
+        FORMAT_MESSAGE_IGNORE_INSERTS,    // dwFlags: Do not expand insert sequences in the message
+        nullptr,                          // lpSource: NULL for system messages
+        err,                              // dwMessageId: The error code to look up
+        0,                                // dwLanguageId: 0 for default language
+        (LPSTR)&buf,                      // lpBuffer: Pointer to variable that receives the allocated buffer pointer
+        0,                                // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
+        nullptr);                         // Arguments: NULL for no insert values
 
     if (buf) {   // Strip trailing CR/LF from the message
         char* p = buf;
@@ -40,13 +40,13 @@ static BOOL EnableDebugPrivilege(void) {
     if (!OpenProcessToken(
         GetCurrentProcess(),                    // ProcessHandle: Handle to the process whose token is opened
         TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,  // DesiredAccess: Need to adjust privileges and query the token
-        &hToken)) {                               // TokenHandle: Pointer that receives the token handle
+        &hToken)) {                             // TokenHandle: Pointer that receives the token handle
         PrintError("OpenProcessToken (current) failed");
         return FALSE;
     }
 
     if (!LookupPrivilegeValueW(
-        nullptr,           // lpSystemName: NULL for local system
+        nullptr,                 // lpSystemName: NULL for local system
         L"SeDebugPrivilege",     // lpName: Name of the privilege to look up
         &luid)) {                // lpLuid: Pointer that receives the LUID for the privilege
         PrintError("LookupPrivilegeValue(SeDebugPrivilege) failed");
@@ -59,12 +59,12 @@ static BOOL EnableDebugPrivilege(void) {
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;   // Enable the privilege
 
     BOOL ok = AdjustTokenPrivileges(
-        hToken,               // TokenHandle: Handle to the token to modify
+        hToken,      // TokenHandle: Handle to the token to modify
         FALSE,       // DisableAllPrivileges: FALSE so only the specified privilege is changed
-        &tp,                     // NewState: Pointer to TOKEN_PRIVILEGES with the new state
-        sizeof(tp),          // BufferLength: Size of the NewState buffer
-        nullptr,            // PreviousState: NULL when not needed
-        nullptr);            // ReturnLength: NULL when not needed
+        &tp,         // NewState: Pointer to TOKEN_PRIVILEGES with the new state
+        sizeof(tp),  // BufferLength: Size of the NewState buffer
+        nullptr,     // PreviousState: NULL when not needed
+        nullptr);    // ReturnLength: NULL when not needed
     CloseHandle(hToken);
     if (!ok) {
         PrintError("AdjustTokenPrivileges(SeDebugPrivilege) failed");
@@ -81,11 +81,11 @@ static BOOL IsProcessElevated(void) {
     TOKEN_ELEVATION elev = {};   // Structure that receives the elevation status
     DWORD size = 0;              // Variable that receives the size of the elevation structure
     BOOL ok = GetTokenInformation(
-        hToken,                   // TokenHandle: Handle to the access token
+        hToken,         // TokenHandle: Handle to the access token
         TokenElevation, // TokenInformationClass: Request elevation information
-        &elev,               // TokenInformation: Buffer that receives TOKEN_ELEVATION
-        sizeof(elev),  // TokenInformationLength: Size of the buffer
-        &size);                  // ReturnLength: Receives the size of the returned data
+        &elev,          // TokenInformation: Buffer that receives TOKEN_ELEVATION
+        sizeof(elev),   // TokenInformationLength: Size of the buffer
+        &size);         // ReturnLength: Receives the size of the returned data
     CloseHandle(hToken);
     return ok && elev.TokenIsElevated;
 }
@@ -94,9 +94,9 @@ static BOOL IsProcessElevated(void) {
 static BOOL RelaunchElevated(int argc, char* argv[], const char* outPath) {
     char selfPath[MAX_PATH];     // Buffer to receive the full path of this executable
     if (!GetModuleFileNameA(
-        nullptr,               // hModule: NULL to get the path of the executable file of the current process
+        nullptr,            // hModule: NULL to get the path of the executable file of the current process
         selfPath,           // lpFilename: Buffer that receives the path
-        sizeof(selfPath)))       // nSize: Size of the buffer in characters
+        sizeof(selfPath)))  // nSize: Size of the buffer in characters
         return FALSE;
 
     char params[MAX_PATH * 2] = "";   // Buffer for command-line parameters (PID and optional output path)
@@ -138,9 +138,9 @@ static FILE* g_resultFile = nullptr;
 
 // Print formatted output to stdout and to g_resultFile (if set); used so elevated process output is visible in the parent CLI
 static void Report(const char* fmt, ...) {
-    va_list ap, aq;         // ap: argument list for vprintf; aq: copy for vfprintf (va_list is consumed by use)
-    va_start(ap, fmt);   // Initialize ap to retrieve arguments after fmt
-    va_copy(aq, ap);  // Copy ap so we can use the same arguments twice (vprintf consumes ap)
+    va_list ap, aq;     // ap: argument list for vprintf; aq: copy for vfprintf (va_list is consumed by use)
+    va_start(ap, fmt);  // Initialize ap to retrieve arguments after fmt
+    va_copy(aq, ap);    // Copy ap so we can use the same arguments twice (vprintf consumes ap)
     vprintf(fmt, ap);
     va_end(ap);
     if (g_resultFile) {
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
 
     // Parse the PID from the command line (argv[1])
     if (argc >= 2) {
-        char* end = nullptr;                    // Pointer to the first invalid character after the number
+        char* end = nullptr;   // Pointer to the first invalid character after the number
         unsigned long p = strtoul(argv[1], &end, 10);   // Convert string to unsigned long in base 10
         pid = (p != 0 && p <= 0xFFFFFFFFu) ? (DWORD)p : 0;   // Valid PID must be non-zero and fit in DWORD
     }
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
     if (!OpenProcessToken(
         hProcess,                         // ProcessHandle: Handle to the process whose token to open
         TOKEN_DUPLICATE | TOKEN_QUERY,    // DesiredAccess: Need to duplicate the token and query it
-        &hToken)) {                         // TokenHandle: Pointer that receives the token handle
+        &hToken)) {                       // TokenHandle: Pointer that receives the token handle
         PrintError("OpenProcessToken failed");
         CloseHandle(hProcess);
         if (g_resultFile) { fclose(g_resultFile); g_resultFile = nullptr; }
@@ -231,12 +231,12 @@ int main(int argc, char* argv[]) {
     // Duplicate the token so we can spawn a process (cmd.exe) using the impersonated token
     HANDLE hDupToken = nullptr;   // Handle to the duplicated (impersonated) token
     if (!DuplicateTokenEx(
-        hToken,                    // ExistingTokenHandle: Token to duplicate
-        TOKEN_ALL_ACCESS,         // DesiredAccess: Request full access to the new token
-        nullptr,                // TokenAttributes: NULL for default security
+        hToken,                // ExistingTokenHandle: Token to duplicate
+        TOKEN_ALL_ACCESS,      // DesiredAccess: Request full access to the new token
+        nullptr,               // TokenAttributes: NULL for default security
         SecurityImpersonation, // ImpersonationLevel: Impersonation level of the new token
-        TokenPrimary,                   // TokenType: Primary token so it can be used to create a process
-        &hDupToken)) {                 // NewTokenHandle: Pointer that receives the new token handle
+        TokenPrimary,          // TokenType: Primary token so it can be used to create a process
+        &hDupToken)) {         // NewTokenHandle: Pointer that receives the new token handle
         PrintError("DuplicateTokenEx failed");
         CloseHandle(hToken);
         if (g_resultFile) { fclose(g_resultFile); g_resultFile = nullptr; }
@@ -249,47 +249,47 @@ int main(int argc, char* argv[]) {
     TOKEN_STATISTICS ts = {};   // Structure that receives token statistics (TokenId, AuthId, etc.)
     DWORD tsLen = 0;            // Variable that receives the size of the returned data
     if (GetTokenInformation(
-        hDupToken,                   // TokenHandle: Handle to the access token
+        hDupToken,         // TokenHandle: Handle to the access token
         TokenStatistics,   // TokenInformationClass: Request token statistics
-        &ts,                    // TokenInformation: Buffer that receives TOKEN_STATISTICS
-        sizeof(ts),       // TokenInformationLength: Size of the buffer
-        &tsLen)) {                  // ReturnLength: Receives the size of the returned data
+        &ts,               // TokenInformation: Buffer that receives TOKEN_STATISTICS
+        sizeof(ts),        // TokenInformationLength: Size of the buffer
+        &tsLen)) {         // ReturnLength: Receives the size of the returned data
         Report("Impersonated token TokenId:      %08lX-%08lX\n", ts.TokenId.HighPart, ts.TokenId.LowPart);
         Report("Impersonated token AuthId (LUID): %08lX-%08lX\n", ts.AuthenticationId.HighPart, ts.AuthenticationId.LowPart);
     }
 
     // Spawn cmd.exe using the duplicated (impersonated) token so it runs in the target process's security context
-    WCHAR cmdLine[] = L"cmd.exe";             // Command line for the new process
+    WCHAR cmdLine[] = L"cmd.exe";         // Command line for the new process
     STARTUPINFOW si = { sizeof(si) };     // Structure that specifies how the new process window should appear
-    PROCESS_INFORMATION pi = {};              // Structure that receives process and thread handles and IDs
+    PROCESS_INFORMATION pi = {};          // Structure that receives process and thread handles and IDs
 
     // Attempt to create a process using the duplicated user token with profile loading
     BOOL created = CreateProcessWithTokenW(
-        hDupToken,                     // hToken: Handle to the primary token (the duplicated token)
-        LOGON_WITH_PROFILE,      // dwLogonFlags: Load the user's profile so the process has full environment
-        nullptr,            // lpApplicationName: NULL; application is specified in lpCommandLine
-        cmdLine,                // lpCommandLine: Command line to execute (cmd.exe)
-        CREATE_NEW_CONSOLE,   // dwCreationFlags: New process gets its own console window
-        nullptr,                // lpEnvironment: NULL to use the token's environment
-        nullptr,           // lpCurrentDirectory: NULL to use the system directory
-        &si,                    // lpStartupInfo: Pointer to STARTUPINFOW structure
-        &pi);            // lpProcessInformation: Pointer that receives process and thread info
+        hDupToken,           // hToken: Handle to the primary token (the duplicated token)
+        LOGON_WITH_PROFILE,  // dwLogonFlags: Load the user's profile so the process has full environment
+        nullptr,             // lpApplicationName: NULL; application is specified in lpCommandLine
+        cmdLine,             // lpCommandLine: Command line to execute (cmd.exe)
+        CREATE_NEW_CONSOLE,  // dwCreationFlags: New process gets its own console window
+        nullptr,             // lpEnvironment: NULL to use the token's environment
+        nullptr,             // lpCurrentDirectory: NULL to use the system directory
+        &si,                 // lpStartupInfo: Pointer to STARTUPINFOW structure
+        &pi);                // lpProcessInformation: Pointer that receives process and thread info
 
     if (!created) {
         Report("CreateProcessWithTokenW failed, trying CreateProcessAsUserW...\n");
         // If CreateProcessWithTokenW fails, try CreateProcessAsUserW (legacy method)
         created = CreateProcessAsUserW(
-            hDupToken,                   // hToken: Handle to the primary token
-            nullptr,          // lpApplicationName: NULL
-            cmdLine,              // lpCommandLine: Command line (cmd.exe)
-            nullptr,        // lpProcessAttributes: NULL for default
-            nullptr,         // lpThreadAttributes: NULL for default
+            hDupToken,          // hToken: Handle to the primary token
+            nullptr,            // lpApplicationName: NULL
+            cmdLine,            // lpCommandLine: Command line (cmd.exe)
+            nullptr,            // lpProcessAttributes: NULL for default
+            nullptr,            // lpThreadAttributes: NULL for default
             FALSE,              // bInheritHandles: New process does not inherit handles
             CREATE_NEW_CONSOLE, // dwCreationFlags: New console for the process
-            nullptr,              // lpEnvironment: NULL
-            nullptr,         // lpCurrentDirectory: NULL
-            &si,                  // lpStartupInfo: Pointer to STARTUPINFOW
-            &pi);          // lpProcessInformation: Pointer that receives process and thread info
+            nullptr,            // lpEnvironment: NULL
+            nullptr,            // lpCurrentDirectory: NULL
+            &si,                // lpStartupInfo: Pointer to STARTUPINFOW
+            &pi);               // lpProcessInformation: Pointer that receives process and thread info
     }
 
     CloseHandle(hDupToken);   // Token is no longer needed after process creation
@@ -311,3 +311,4 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
+
