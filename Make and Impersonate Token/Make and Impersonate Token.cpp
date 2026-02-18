@@ -31,14 +31,14 @@ static void PrintError(const char* text) {
 
     FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | // dwFlags: Allocate a buffer for the message
-        FORMAT_MESSAGE_FROM_SYSTEM |              // dwFlags: Get the message from the system message table
-        FORMAT_MESSAGE_IGNORE_INSERTS,            // dwFlags: Do not expand insert sequences in the message
-        nullptr,                        // lpSource: NULL for system messages
-        err,                         // dwMessageId: The error code to look up
-        0,                          // dwLanguageId: 0 for default language
-        (LPSTR)&buf,                    // lpBuffer: Pointer to variable that receives the allocated buffer pointer
-        0,                                 // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
-        nullptr);                      // Arguments: NULL for no insert values
+        FORMAT_MESSAGE_FROM_SYSTEM |     // dwFlags: Get the message from the system message table
+        FORMAT_MESSAGE_IGNORE_INSERTS,   // dwFlags: Do not expand insert sequences in the message
+        nullptr,                         // lpSource: NULL for system messages
+        err,                             // dwMessageId: The error code to look up
+        0,                               // dwLanguageId: 0 for default language
+        (LPSTR)&buf,                     // lpBuffer: Pointer to variable that receives the allocated buffer pointer
+        0,                               // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
+        nullptr);                        // Arguments: NULL for no insert values
 
     if (buf) {   // Strip trailing CR/LF from the message
         char* p = buf;
@@ -56,11 +56,11 @@ static std::set<std::wstring> GetLoggedInUserNames() {
     DWORD sessionCount = 0;                  // Variable that receives the number of sessions returned
 
     if (!WTSEnumerateSessions(
-        WTS_CURRENT_SERVER_HANDLE,   // hServer: Handle of the terminal server (local machine)
+        WTS_CURRENT_SERVER_HANDLE,  // hServer: Handle of the terminal server (local machine)
         0,                          // Reserved: must be 0
-        1,                           // Version: 1
-        &pSessions,            // ppSessionInfo: Pointer that receives the session array
-        &sessionCount)) {             // pCount: Pointer that receives the number of sessions
+        1,                          // Version: 1
+        &pSessions,                 // ppSessionInfo: Pointer that receives the session array
+        &sessionCount)) {           // pCount: Pointer that receives the number of sessions
         return names;
     }
 
@@ -72,10 +72,10 @@ static std::set<std::wstring> GetLoggedInUserNames() {
         DWORD bytesReturned = 0;      // Variable that receives the size of the returned data
         if (WTSQuerySessionInformation(
                 WTS_CURRENT_SERVER_HANDLE,   // hServer: Handle of the terminal server
-                pSessions[i].SessionId,    // SessionId: Session to query
-                WTSUserName,            // WTSInfoClass: Request the user name
-                &pUserName,                 // ppBuffer: Pointer that receives the buffer (allocated by API)
-                &bytesReturned)       // pBytesReturned: Receives the size of the buffer
+                pSessions[i].SessionId,      // SessionId: Session to query
+                WTSUserName,                 // WTSInfoClass: Request the user name
+                &pUserName,                  // ppBuffer: Pointer that receives the buffer (allocated by API)
+                &bytesReturned)              // pBytesReturned: Receives the size of the buffer
                 && pUserName && pUserName[0]) {
             std::wstring u(pUserName);
             std::transform(u.begin(), u.end(), u.begin(), ::towlower);
@@ -105,14 +105,14 @@ static std::vector<std::wstring> GetUsersNotLoggedIn() {
     std::set<std::wstring> loggedIn = GetLoggedInUserNames();
 
     nStatus = NetUserEnum(
-        nullptr,               // servername: NULL for local machine
-        dwLevel,                    // level: 0 for USER_INFO_0
-        FILTER_NORMAL_ACCOUNT,     // filter: Normal user accounts only (exclude built-in/guest)
-        (LPBYTE*)&pBuf,            // bufptr: Pointer that receives the buffer (allocated by API)
-        dwPrefMaxLen,          // prefmaxlen: Preferred max length
-        &dwEntriesRead,       // entriesread: Receives the number of entries read
-        &dwTotalEntries,     // totalentries: Receives the total number of entries
-        &dwResumeHandle);   // resume_handle: Resume handle for continuation
+        nullptr,                // servername: NULL for local machine
+        dwLevel,                // level: 0 for USER_INFO_0
+        FILTER_NORMAL_ACCOUNT,  // filter: Normal user accounts only (exclude built-in/guest)
+        (LPBYTE*)&pBuf,         // bufptr: Pointer that receives the buffer (allocated by API)
+        dwPrefMaxLen,           // prefmaxlen: Preferred max length
+        &dwEntriesRead,         // entriesread: Receives the number of entries read
+        &dwTotalEntries,        // totalentries: Receives the total number of entries
+        &dwResumeHandle);       // resume_handle: Resume handle for continuation
 
     // If enumeration succeeded (or returned a partial buffer), walk the user list and keep only those not logged in
     if (nStatus == NERR_Success || nStatus == ERROR_MORE_DATA) {
@@ -190,12 +190,12 @@ static int Run(int argc, wchar_t* argv[]) {
 
     HANDLE hToken = nullptr;   // Handle that will receive the logon token
     BOOL ok = LogonUserW(
-        selectedUser.c_str(),          // lpszUsername: Name of the user account to log on
-        L".",                            // lpszDomain: "." for local machine
-        password.c_str(),              // lpszPassword: Password for the account
-        LOGON32_LOGON_NETWORK,          // dwLogonType: Network logon (validates credentials without interactive logon)
+        selectedUser.c_str(),       // lpszUsername: Name of the user account to log on
+        L".",                       // lpszDomain: "." for local machine
+        password.c_str(),           // lpszPassword: Password for the account
+        LOGON32_LOGON_NETWORK,      // dwLogonType: Network logon (validates credentials without interactive logon)
         LOGON32_PROVIDER_DEFAULT,   // dwLogonProvider: Default provider
-        &hToken);                           // phToken: Pointer that receives the handle to the token
+        &hToken);                   // phToken: Pointer that receives the handle to the token
 
     if (!ok) {
         PrintError("LogonUser failed");
@@ -204,7 +204,7 @@ static int Run(int argc, wchar_t* argv[]) {
 
     ok = SetThreadToken(
         nullptr,    // ThreadHandle: NULL to set the token for the calling thread
-        hToken);     // Token: Handle to the token to assign to the thread
+        hToken);    // Token: Handle to the token to assign to the thread
     if (!ok) {
         PrintError("SetThreadToken failed");
         CloseHandle(hToken);
@@ -232,3 +232,4 @@ int main() {
         LocalFree(argv);   // Free the buffer allocated by CommandLineToArgvW
     return ret;
 }
+
